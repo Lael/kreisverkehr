@@ -1,8 +1,10 @@
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 
 public class KreisverkehrRunner {
 
@@ -18,11 +20,11 @@ public class KreisverkehrRunner {
         // get number of frames
         int numFrames = (int) Math.ceil(config.getFramesPerSecond() * config.getTotalLength());
         double frameTime = 1.0 / config.getFramesPerSecond();
-        int numZeros = (int) (Math.log(numFrames + 1) / Math.log(10));
+        int numZeros = (int) (Math.log(numFrames + 1) / Math.log(10)) + 1;
 
         File pngsDir = new File(".pngs");
 
-        deleteDir(pngsDir);
+        delete(pngsDir);
 
         if (!pngsDir.mkdirs()) {
             System.err.println("Failed to create .pngs/");
@@ -42,14 +44,13 @@ public class KreisverkehrRunner {
         }
 
         try {
-            Runtime runtime = Runtime.getRuntime();
-            String command = String.format("ffmpeg -framerate %f -pattern_type glob -i '/Users/laelcosta/Desktop/kreisverkehr/.pngs/*.png' -c:v ffv1 %s",
+            delete(new File(outputFilePath));
+            String command = String.format("ffmpeg -framerate %f -i .pngs/frame%%0%dd.png -vcodec libx264 -crf 25  -pix_fmt yuv420p %s",
                     config.getFramesPerSecond(),
+                    numZeros,
                     outputFilePath);
-            System.out.println(command);
-            Process ffmpegProcess = runtime.exec(command);
-            ffmpegProcess.waitFor();
-            deleteDir(pngsDir);
+            executeCommand(command);
+            delete(pngsDir);
             File outputFile = new File(outputFilePath);
             Desktop.getDesktop().open(outputFile);
         } catch (IOException | InterruptedException e) {
@@ -57,23 +58,32 @@ public class KreisverkehrRunner {
         }
     }
 
-    private static void deleteDir(File dir) {
-        File[] files = dir.listFiles();
-        if (dir.exists() && files != null) {
-            for (File file : files) {
-                if (file.isDirectory()) {
-                    deleteDir(file);
-                } else {
-                    file.delete();
-                }
-            }
-            dir.delete();
+    private static void executeCommand(String command) throws IOException, InterruptedException {
+        Runtime runtime = Runtime.getRuntime();
+        System.out.println(command);
+        Process proc = runtime.exec(command);
+
+        BufferedReader stdInput = new BufferedReader(new
+                InputStreamReader(proc.getInputStream()));
+
+        BufferedReader stdError = new BufferedReader(new
+                InputStreamReader(proc.getErrorStream()));
+
+        // read any errors from the attempted command
+        String s;
+        System.out.println("Here is the standard error of the command (if any):\n");
+        while ((s = stdError.readLine()) != null) {
+            System.out.println(s);
         }
     }
 
-    private static void deleteFile(File file) {
-        if (!file.delete()) {
-            System.err.println("Failed to delete file: " + file.getName());
+    private static void delete(File file) {
+        File[] files = file.listFiles();
+        if (file.exists() && files != null) {
+            for (File f : files) {
+                delete(f);
+            }
         }
+        file.delete();
     }
 }

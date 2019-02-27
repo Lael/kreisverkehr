@@ -1,4 +1,5 @@
 import animation.Animation;
+import graphics.Color;
 
 import java.awt.image.BufferedImage;
 import java.util.List;
@@ -14,7 +15,17 @@ public class Scene {
         this.config = config;
     }
 
+    private void fillFrame(BufferedImage frame) {
+        for (int x = 0; x < config.getWidth(); x++) {
+            for (int y = 0; y < config.getHeight(); y++) {
+                frame.setRGB(x, y, Color.packd(0.5f, 1, 1));
+            }
+        }
+    }
+
     BufferedImage getFrame(double dt) {
-        return new BufferedImage(config.getWidth(), config.getWidth(), TYPE_INT_ARGB);
+        BufferedImage frame = new BufferedImage(config.getWidth(), config.getHeight(), TYPE_INT_ARGB);
+        fillFrame(frame);
+        return frame;
     }
 }
