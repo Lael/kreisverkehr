@@ -1,9 +1,19 @@
 package animation;
 
 import drawable.DrawableObject;
+import graphics.Canvas;
 
-import java.util.List;
 
-public abstract class Animation {
-    public abstract List<DrawableObject> interpolateFrame(double time);
+public class Animation {
+
+    InterpolationFunction interpolationFunction;
+
+    public Animation(InterpolationFunction interpolationFunction) {
+        this.interpolationFunction = interpolationFunction;
+    }
+
+    public void draw(Canvas canvas, double time) {
+        DrawableObject drawableObject = interpolationFunction.interpolate(time);
+        drawableObject.draw(canvas);
+    }
 }

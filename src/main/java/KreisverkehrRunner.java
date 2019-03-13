@@ -1,10 +1,16 @@
+import animation.Animation;
+import animation.InterpolationFunction;
+import drawable.Disk;
+import drawable.Line;
+import graphics.Color;
+
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 
 public class KreisverkehrRunner {
 
@@ -14,8 +20,15 @@ public class KreisverkehrRunner {
 
         Config config = Config.parseFromFilePath(configFilePath);
 
-        // change to change the result
-        Scene scene = new Scene(config);
+        List<Animation> animations = new ArrayList<>();
+        InterpolationFunction lineInterpolation = (time) -> new Line(0, 0, config.getWidth(), time * config.getHeight(), 10, new graphics.Color(1, 1, 1));
+        animations.add(new Animation(lineInterpolation));
+        InterpolationFunction diskInterpolation = (time) -> {
+            double t = time / config.getTotalLength();
+            return new Disk(config.getWidth() / 2.0, config.getHeight() * t, 100 * Math.sin(t * Math.PI), new Color(1, 1, 1));
+        };
+        animations.add(new Animation(diskInterpolation));
+        Scene scene = new Scene(config.getWidth(), config.getHeight(), animations);
 
         // get number of frames
         int numFrames = (int) Math.ceil(config.getFramesPerSecond() * config.getTotalLength());
@@ -45,7 +58,7 @@ public class KreisverkehrRunner {
 
         try {
             delete(new File(outputFilePath));
-            String command = String.format("ffmpeg -framerate %f -i .pngs/frame%%0%dd.png -vcodec libx264 -crf 25  -pix_fmt yuv420p %s",
+            String command = String.format("ffmpeg -framerate %f -i .pngs/frame%%0%dd.png -vcodec libx264 -crf 1  -pix_fmt yuv420p %s",
                     config.getFramesPerSecond(),
                     numZeros,
                     outputFilePath);
@@ -62,19 +75,7 @@ public class KreisverkehrRunner {
         Runtime runtime = Runtime.getRuntime();
         System.out.println(command);
         Process proc = runtime.exec(command);
-
-        BufferedReader stdInput = new BufferedReader(new
-                InputStreamReader(proc.getInputStream()));
-
-        BufferedReader stdError = new BufferedReader(new
-                InputStreamReader(proc.getErrorStream()));
-
-        // read any errors from the attempted command
-        String s;
-        System.out.println("Here is the standard error of the command (if any):\n");
-        while ((s = stdError.readLine()) != null) {
-            System.out.println(s);
-        }
+        proc.waitFor();
     }
 
     private static void delete(File file) {
