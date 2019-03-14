@@ -23,8 +23,8 @@ public class Line extends DrawableObject {
 
     @Override
     public void draw(Canvas canvas) {
-        int dxi = Math.min(1, Math.abs((int) Math.round(x2 - x1)));
-        int dyi = Math.min(1, Math.abs((int) Math.round(y2 - y1)));
+        int dxi = Math.max(1, Math.abs((int) Math.round(x2 - x1)));
+        int dyi = Math.max(1, Math.abs((int) Math.round(y2 - y1)));
         if (x1 == x2) {
             if (y1 == y2) {
                 canvas.plotDisk(x1, y1, thickness, color);

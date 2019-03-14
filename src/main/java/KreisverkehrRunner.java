@@ -1,5 +1,6 @@
 import animation.Animation;
 import animation.InterpolationFunction;
+import drawable.Annulus;
 import drawable.Disk;
 import drawable.Line;
 import graphics.Color;
@@ -15,19 +16,18 @@ import java.util.List;
 public class KreisverkehrRunner {
 
     public void run(String configFilePath, String outputFilePath) {
-        System.out.println("config: " + configFilePath);
-        System.out.println("output: " + outputFilePath);
+//        System.out.println("config: " + configFilePath);
+//        System.out.println("output: " + outputFilePath);
 
         Config config = Config.parseFromFilePath(configFilePath);
 
         List<Animation> animations = new ArrayList<>();
-        InterpolationFunction lineInterpolation = (time) -> new Line(0, 0, config.getWidth(), time * config.getHeight(), 10, new graphics.Color(1, 1, 1));
-        animations.add(new Animation(lineInterpolation));
-        InterpolationFunction diskInterpolation = (time) -> {
-            double t = time / config.getTotalLength();
-            return new Disk(config.getWidth() / 2.0, config.getHeight() * t, 100 * Math.sin(t * Math.PI), new Color(1, 1, 1));
-        };
-        animations.add(new Animation(diskInterpolation));
+        InterpolationFunction lineInterpolation = (t) -> new Line(0, 0, config.getWidth(), t * config.getHeight(), 10, new graphics.Color(1, 1, 1));
+        animations.add(new Animation(lineInterpolation, 0.0, 3.0));
+        InterpolationFunction diskInterpolation = (t) -> new Disk(config.getWidth() / 2.0, config.getHeight() * t, 100 * Math.sin(t * Math.PI), new Color(1, 1, 1));
+        animations.add(new Animation(diskInterpolation, 3.0, 4.0));
+        InterpolationFunction annulusInterpolation = (t) -> new Annulus(config.getWidth() * t, config.getHeight() / 2.0, 100 * Math.sin(t * Math.PI), 200 * Math.sin(t * Math.PI), new Color(0.4, 0.6, 0.8));
+        animations.add(new Animation(annulusInterpolation, 6.0, 4.0));
         Scene scene = new Scene(config.getWidth(), config.getHeight(), animations);
 
         // get number of frames
@@ -44,13 +44,13 @@ public class KreisverkehrRunner {
             System.exit(1);
         }
 
-        for (int i = 0; i < numFrames; i++) {
+        for (int i = 0; i <= numFrames; i++) {
             BufferedImage image = scene.getFrame(frameTime * i);
             String filename = String.format(".pngs/frame%0" + numZeros + "d.png", i + 1);
             File frameFile = new File(filename);
             try {
                 ImageIO.write(image, "png", frameFile);
-                System.out.println("writing " + filename);
+//                System.out.println("writing " + filename);
             } catch (IOException e) {
                 e.printStackTrace();
             }
